@@ -66,6 +66,7 @@ const Login: React.FC = () => {
 
     try {
       setLoading(true);
+       //supabase.auth.signUp({ email, password })
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
@@ -80,7 +81,7 @@ const Login: React.FC = () => {
       // login exitoso
       Alert.alert('Success', 'Signed in successfully');
       // Redirigir a la pantalla principal (ajusta la ruta según tu app)
-      router.push('/home');
+      router.push('../home');
     } catch (e: any) {
       const message = e?.message || 'Unknown error';
       console.error('Login failed:', e);
@@ -92,7 +93,7 @@ const Login: React.FC = () => {
 
   const goToRegister = () => {
     // Ajusta la ruta si tu archivo de register está en otra ruta
-    router.push('/Register');
+    router.push('../Register');
   };
 
   return (
@@ -250,4 +251,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Login;
+export default Login; 
