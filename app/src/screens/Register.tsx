@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
- 
+
 import { PostgrestError } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
 import { supabase } from '../../lib/supabase';
@@ -62,16 +62,15 @@ const Register: React.FC = () => {
 
       const nowIso = new Date().toISOString();
       const payload = {
-         firstname: firstname.trim(),
-         lastname: lastname.trim(),
-         mobile_number: mobile.trim(),
-         email: email.trim(),
-         password: hashed,
-         status: true,
-         created_at: nowIso,
-         updated_at: nowIso,
-         deleted_at: null as any,
-
+        firstname: firstname.trim(),
+        lastname: lastname.trim(),
+        mobile_number: mobile.trim(),
+        email: email.trim(),
+        password: hashed,
+        status: true,
+        created_at: nowIso,
+        updated_at: nowIso,
+        deleted_at: null as any,
         
       };
       const { error } = await supabase.from('users').insert(payload);

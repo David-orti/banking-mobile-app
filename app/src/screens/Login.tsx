@@ -6,21 +6,22 @@
     expo install react-native-get-random-values   # si usas Expo
 */
 
+import 'react-native-get-random-values';
+
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import 'react-native-get-random-values';
 import { supabase } from '../../lib/supabase';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -66,7 +67,6 @@ const Login: React.FC = () => {
 
     try {
       setLoading(true);
-       //supabase.auth.signUp({ email, password })
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
@@ -81,7 +81,7 @@ const Login: React.FC = () => {
       // login exitoso
       Alert.alert('Success', 'Signed in successfully');
       // Redirigir a la pantalla principal (ajusta la ruta según tu app)
-      router.push('../home');
+      router.push('/src/screens/Main');
     } catch (e: any) {
       const message = e?.message || 'Unknown error';
       console.error('Login failed:', e);
@@ -93,7 +93,7 @@ const Login: React.FC = () => {
 
   const goToRegister = () => {
     // Ajusta la ruta si tu archivo de register está en otra ruta
-    router.push('../Register');
+    router.push('/src/screens/Register');
   };
 
   return (
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   input: {
-    backgroundColor: '#1f2937',
+    backgroundColor: '#1f2937ff',
     borderWidth: 1,
     borderColor: '#334155',
     borderRadius: 12,
@@ -251,4 +251,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Login; 
+export default Login;
