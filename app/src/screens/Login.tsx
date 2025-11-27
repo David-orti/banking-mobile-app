@@ -1,13 +1,11 @@
 /*
   Login.tsx
-  React Native login screen matching style/structure of your Register.tsx.
-  Requisitos:
-    npm install react-native-get-random-values
-    expo install react-native-get-random-values   # si usas Expo
+  Corregido para usar bcryptjs y autenticar contra la tabla users
 */
 
 import 'react-native-get-random-values';
 
+import bcrypt from "bcryptjs"; // 👈❗ IMPORTANTE
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -55,54 +53,60 @@ const Login: React.FC = () => {
   const inputBorderColor = (name: string) =>
     focused === name ? styles.inputFocus.borderColor : styles.input.borderColor;
 
+  // 🚀 LOGIN REAL
   const handleSignIn = async () => {
-    // marcar touched para mostrar errores si no ha interactuado
     setTouched({ email: true, password: true });
 
     const err = validateAll();
     if (err) {
-      Alert.alert('Validación', err);
+      Alert.alert("Validación", err);
       return;
     }
 
     try {
       setLoading(true);
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
-        password: String(password),
-      });
+      // 1️⃣ Buscar usuario por email
+      const { data: user, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("email", email.trim().toLowerCase())
+        .single();
 
-      if (error) {
-        // supabase puede regresar errores como PostgrestError o auth error
-        throw error;
+      if (error || !user) {
+        Alert.alert("Error", "Usuario no encontrado");
+        return;
       }
 
-      // login exitoso
-      Alert.alert('Success', 'Signed in successfully');
-      // Redirigir a la pantalla principal (ajusta la ruta según tu app)
-      router.push('/src/screens/Main');
-    } catch (e: any) {
-      const message = e?.message || 'Unknown error';
-      console.error('Login failed:', e);
-      Alert.alert('Login failed', message);
+      // 2️⃣ Comparar contraseñas con bcrypt
+      const match = await bcrypt.compare(password, user.password);
+
+      if (!match) {
+        Alert.alert("Error", "Contraseña incorrecta");
+        return;
+      }
+
+      // 3️⃣ Login exitoso
+      Alert.alert("Success", "Inicio de sesión exitoso");
+      router.push("/src/screens/Main");
+
+    } catch (e) {
+      console.error(e);
+      Alert.alert("Error", "Hubo un problema al iniciar sesión");
     } finally {
       setLoading(false);
     }
   };
 
   const goToRegister = () => {
-    // Ajusta la ruta si tu archivo de register está en otra ruta
     router.push('/src/screens/Register');
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={{ flex: 1 }}
-    >
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.card}>
+
           <Text style={styles.title}>Sign in</Text>
 
           <View style={styles.inputWrap}>
@@ -114,17 +118,13 @@ const Login: React.FC = () => {
               placeholderTextColor="#FFFFFF99"
               keyboardType="email-address"
               autoCapitalize="none"
-              autoCorrect={false}
               style={[styles.input, { borderColor: inputBorderColor('email') }]}
               onFocus={() => setFocused('email')}
-              onBlur={() => {
-                setFocused('');
-                setTouched((t) => ({ ...t, email: true }));
-              }}
+              onBlur={() => { setFocused(''); setTouched(t => ({ ...t, email: true })); }}
             />
-            {touched.email && emailError() ? (
+            {touched.email && emailError() && (
               <Text style={styles.errorText}>{emailError()}</Text>
-            ) : null}
+            )}
           </View>
 
           <View style={styles.inputWrap}>
@@ -137,14 +137,11 @@ const Login: React.FC = () => {
               secureTextEntry
               style={[styles.input, { borderColor: inputBorderColor('password') }]}
               onFocus={() => setFocused('password')}
-              onBlur={() => {
-                setFocused('');
-                setTouched((t) => ({ ...t, password: true }));
-              }}
+              onBlur={() => { setFocused(''); setTouched(t => ({ ...t, password: true })); }}
             />
-            {touched.password && passwordError() ? (
+            {touched.password && passwordError() && (
               <Text style={styles.errorText}>{passwordError()}</Text>
-            ) : null}
+            )}
           </View>
 
           <TouchableOpacity
@@ -155,20 +152,10 @@ const Login: React.FC = () => {
             {loading ? <ActivityIndicator /> : <Text style={styles.buttonText}>Sign in</Text>}
           </TouchableOpacity>
 
-          <View style={{ marginTop: 12, alignItems: 'center' }}>
-            <Text style={styles.helper}>
-              Don't have an account?{' '}
-              <Text style={styles.link} onPress={goToRegister}>
-                Sign up
-              </Text>
-            </Text>
-          </View>
+          <Text style={styles.helper}>
+            Don't have an account? <Text style={styles.link} onPress={goToRegister}>Sign up</Text>
+          </Text>
 
-          <View style={{ marginTop: 10 }}>
-            <Text style={styles.helperSmall}>
-              By signing in you accept our terms and privacy policy.
-            </Text>
-          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -207,7 +194,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   input: {
-    backgroundColor: '#1f2937ff',
+    backgroundColor: '#1f2937',
     borderWidth: 1,
     borderColor: '#334155',
     borderRadius: 12,
@@ -216,7 +203,7 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   inputFocus: {
-    borderColor: '#16a34a', // verde
+    borderColor: '#16a34a',
   },
   button: {
     backgroundColor: '#22c55e',
@@ -233,12 +220,7 @@ const styles = StyleSheet.create({
   helper: {
     color: '#9ca3af',
     textAlign: 'center',
-  },
-  helperSmall: {
-    color: '#9ca3af',
-    textAlign: 'center',
-    marginTop: 8,
-    fontSize: 12,
+    marginTop: 12,
   },
   link: {
     color: '#93c5fd',
