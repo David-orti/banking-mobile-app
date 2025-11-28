@@ -1,3 +1,6 @@
+ import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
+
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -48,44 +51,90 @@ const Register: React.FC = () => {
     return null;
   };
 
-  const handleRegister = async () => {
-    const err = validate();
-    if (err) {
-      Alert.alert('Validation', err);
-      return;
+  const router = useRouter();
+
+const handleRegister = async () => {
+  const err = validate();
+  if (err) {
+    Alert.alert('Validation', err);
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    // hash password
+    const hashed = await bcrypt.hash(password, 10);
+
+    const nowIso = new Date().toISOString();
+    // genera número de cuenta de 10 dígitos
+    const account_number = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+
+    // balance inicial (puedes cambiar el valor)
+    const initialBalance = 500000; // ejemplo $500.000
+
+    const payload = {
+      firstname: firstname.trim(),
+      lastname: lastname.trim(),
+      mobile_number: mobile.trim(),
+      email: email.trim().toLowerCase(),
+      password: hashed,
+      status: true,
+      created_at: nowIso,
+      updated_at: nowIso,
+      deleted_at: null as any,
+    };
+
+    // 1) Inserta user
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .insert(payload)
+      .select()
+      .single();
+
+    if (userError) throw userError;
+
+    // 2) Crea la cuenta asociada
+    const accountPayload = {
+      user_email: email.trim().toLowerCase(),
+      account_number,
+      account_type: 'savings',
+      balance: initialBalance,
+    };
+
+    const { error: accErr } = await supabase.from('accounts').insert(accountPayload);
+    if (accErr) {
+      // si falla la cuenta, elimina user para no dejar datos huérfanos (opcional)
+      await supabase.from('users').delete().eq('email', email.trim().toLowerCase());
+      throw accErr;
     }
 
-    try {
-      setLoading(true);
+    // 3) Guardar sesión local (opcional: para que entre directo al Main)
+    const userToStore = {
+      ...userData,
+      account_number,
+      balance: initialBalance,
+    };
+    await AsyncStorage.setItem('session_user', JSON.stringify(userToStore));
 
-      const hashed = await bcrypt.hash(password, 10);
+    Alert.alert('Success', 'User registered successfully');
 
-      const nowIso = new Date().toISOString();
-      const payload = {
-        firstname: firstname.trim(),
-        lastname: lastname.trim(),
-        mobile_number: mobile.trim(),
-        email: email.trim(),
-        password: hashed,
-        status: true,
-        created_at: nowIso,
-        updated_at: nowIso,
-        deleted_at: null as any,
-        
-      };
-      const { error } = await supabase.from('users').insert(payload);
+    resetForm();
 
-      if (error) throw error;
+    // navegar al Main y pasar user
+    router.push({
+      pathname: '/src/screens/Main',
+      params: { user: JSON.stringify(userToStore) }
+    });
 
-      Alert.alert('Success', 'User registered successfully');
-      resetForm();
-    } catch (e) {
-      const s = (e as PostgrestError)?.message || (e as Error)?.message || 'Unknown error';
-      Alert.alert('Registration failed', s);
-    } finally {
-      setLoading(false);
-    }
-  };
+  } catch (e) {
+    const s = (e as any)?.message || JSON.stringify(e);
+    Alert.alert('Registration failed', s);
+  } finally {
+    setLoading(false);
+  }
+};
+
   
   // Frontend
   return (

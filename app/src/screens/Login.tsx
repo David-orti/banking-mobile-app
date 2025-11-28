@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import bcrypt from "bcryptjs";
+import { useRouter } from "expo-router";
+import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -8,247 +11,180 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import 'react-native-get-random-values';
+  TouchableOpacity
+} from "react-native";
+import { supabase } from "../../lib/supabase"; // verifica tu ruta
 
-import bcrypt from 'bcryptjs';
-import { useRouter } from 'expo-router';
-import { supabase } from '../../lib/supabase';
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const Login: React.FC = () => {
+export default function Login() {
+  const [identifier, setIdentifier] = useState(""); // email o móvil
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [focused, setFocused] = useState<string>('');
-  const [touched, setTouched] = useState({ email: false, password: false });
-  const [loading, setLoading] = useState(false);
-
-  const emailError = (): string | null => {
-    if (!email.trim()) return 'Email requerido';
-    if (!EMAIL_RE.test(email)) return 'Formato de email inválido';
-    return null;
-  };
-
-  const passwordError = (): string | null => {
-    if (!password) return 'Contraseña requerida';
-    if (password.length < 6) return 'La contraseña debe tener al menos 6 caracteres';
-    return null;
-  };
-
-  const validateAll = (): string | null => {
-    const errs = [emailError(), passwordError()].filter(Boolean);
-    return errs.length > 0 ? (errs[0] as string) : null;
-  };
-
-  const inputBorderColor = (name: string) =>
-    focused === name ? styles.inputFocus.borderColor : styles.input.borderColor;
-
   const handleSignIn = async () => {
-    setTouched({ email: true, password: true });
-
-    const err = validateAll();
-    if (err) {
-      Alert.alert('Validación', err);
+    if (!identifier || !password) {
+      Alert.alert("Error", "Todos los campos son obligatorios.");
       return;
     }
 
     try {
       setLoading(true);
 
-      // 1) Buscar usuario en la tabla
-      const { data: users, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email.trim().toLowerCase())
+      console.log("[Login] identificador:", identifier);
+
+      const isEmail = identifier.includes("@");
+      const field = isEmail ? "email" : "mobile_number";
+
+      console.log("[Login] buscando por:", field);
+
+      const { data: users, error: userError } = await supabase
+        .from("users")
+        .select("*")
+        .eq(field, identifier)
         .limit(1);
 
-      if (error) throw error;
+      if (userError) {
+        console.error("[Login] supabase error:", userError);
+        throw userError;
+      }
 
       if (!users || users.length === 0) {
-        Alert.alert('Login failed', 'El usuario no existe');
+        Alert.alert("Error", "Usuario no encontrado.");
         return;
       }
 
       const user = users[0];
+      console.log("[Login] usuario encontrado:", user.email);
 
-      // 2) Comparar contraseña usando bcrypt
-      const isValid = await bcrypt.compare(password, user.password);
-
-      if (!isValid) {
-        Alert.alert('Login failed', 'Contraseña incorrecta');
+      // Verificar contraseña con bcrypt
+      const validPassword = await bcrypt.compare(password, user.password);
+      if (!validPassword) {
+        Alert.alert("Error", "Contraseña incorrecta.");
         return;
       }
 
-      Alert.alert('Success', 'Inicio de sesión correcto');
+      // Traer cuenta principal
+      let account = null;
+      try {
+        const { data: accData } = await supabase
+          .from("accounts")
+          .select("*")
+          .eq("user_email", user.email)
+          .limit(1);
 
-      // 3) Navegar al Main
-      router.push('/src/screens/Main'); // <-- ESTA ES LA RUTA CORRECTA
+        if (accData && accData.length > 0) account = accData[0];
+      } catch (accErr) {
+        console.warn("[Login] error account:", accErr);
+      }
 
+      const userToStore = { ...user, account };
+      await AsyncStorage.setItem("session_user", JSON.stringify(userToStore));
+      console.log("[Login] sesión guardada");
+
+      Alert.alert("Éxito", "Inicio de sesión correcto.");
+
+      // Navegar al Main
+      try {
+        router.replace("/src/screens/Main");
+      } catch {
+        router.replace("/");
+      }
     } catch (e: any) {
-      Alert.alert('Login failed', e?.message || 'Unknown error');
+      console.error("[Login] error:", e);
+      Alert.alert("Error", e.message || "Hubo un problema inesperado.");
     } finally {
       setLoading(false);
     }
   };
 
-  const goToRegister = () => {
-    router.push('/src/screens/Register');
-  };
-
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <View style={styles.card}>
-          <Text style={styles.title}>Sign in</Text>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Text style={styles.title}>Iniciar Sesión</Text>
 
-          <View style={styles.inputWrap}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder="jane@example.com"
-              placeholderTextColor="#FFFFFF99"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              style={[styles.input, { borderColor: inputBorderColor('email') }]}
-              onFocus={() => setFocused('email')}
-              onBlur={() => {
-                setFocused('');
-                setTouched((t) => ({ ...t, email: true }));
-              }}
-            />
-            {touched.email && emailError() ? (
-              <Text style={styles.errorText}>{emailError()}</Text>
-            ) : null}
-          </View>
+        <TextInput
+          style={styles.input}
+          placeholder="Correo o Número móvil"
+          placeholderTextColor="#94a3b8"
+          value={identifier}
+          onChangeText={setIdentifier}
+        />
 
-          <View style={styles.inputWrap}>
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              value={password}
-              onChangeText={setPassword}
-              placeholder="••••••••"
-              placeholderTextColor="#FFFFFF99"
-              secureTextEntry
-              style={[styles.input, { borderColor: inputBorderColor('password') }]}
-              onFocus={() => setFocused('password')}
-              onBlur={() => {
-                setFocused('');
-                setTouched((t) => ({ ...t, password: true }));
-              }}
-            />
-            {touched.password && passwordError() ? (
-              <Text style={styles.errorText}>{passwordError()}</Text>
-            ) : null}
-          </View>
+        <TextInput
+          style={styles.input}
+          placeholder="Contraseña"
+          placeholderTextColor="#94a3b8"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
 
-          <TouchableOpacity
-            style={[styles.button, loading && { opacity: 0.6 }]}
-            onPress={handleSignIn}
-            disabled={loading}
-          >
-            {loading ? <ActivityIndicator /> : <Text style={styles.buttonText}>Sign in</Text>}
-          </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.btn}
+          onPress={handleSignIn}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text style={styles.btnText}>Entrar</Text>
+          )}
+        </TouchableOpacity>
 
-          <View style={{ marginTop: 12, alignItems: 'center' }}>
-            <Text style={styles.helper}>
-              Don't have an account?{' '}
-              <Text style={styles.link} onPress={goToRegister}>
-                Sign up
-              </Text>
-            </Text>
-          </View>
-
-          <View style={{ marginTop: 10 }}>
-            <Text style={styles.helperSmall}>
-              By signing in you accept our terms and privacy policy.
-            </Text>
-          </View>
-        </View>
+        <TouchableOpacity
+          onPress={() => router.push("/src/screens/Register")}
+          style={{ marginTop: 15 }}
+        >
+          <Text style={styles.link}>¿No tienes cuenta? Regístrate aquí.</Text>
+        </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
+    backgroundColor: "#0f172a",
     padding: 20,
-    backgroundColor: '#0f172a',
-    justifyContent: 'center',
-  },
-  card: {
-    backgroundColor: '#111827',
-    borderRadius: 16,
-    padding: 20,
-    elevation: 6,
+    justifyContent: "center",
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: 'white',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  inputWrap: {
-    marginVertical: 6,
-  },
-  label: {
-    color: '#cbd5e1',
-    marginBottom: 6,
+    color: "white",
+    fontSize: 32,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 40,
   },
   input: {
-    backgroundColor: '#1f2937ff',
-    borderWidth: 1,
-    borderColor: '#334155',
+    backgroundColor: "#1e293b",
+    color: "white",
+    padding: 15,
     borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    color: 'white',
-  },
-  inputFocus: {
-    borderColor: '#16a34a',
-  },
-  button: {
-    backgroundColor: '#22c55e',
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  buttonText: {
-    color: '#0b1421',
-    fontWeight: '700',
+    marginBottom: 15,
     fontSize: 16,
   },
-  helper: {
-    color: '#9ca3af',
-    textAlign: 'center',
+  btn: {
+    backgroundColor: "#22c55e",
+    paddingVertical: 15,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 10,
   },
-  helperSmall: {
-    color: '#9ca3af',
-    textAlign: 'center',
-    marginTop: 8,
-    fontSize: 12,
+  btnText: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "700",
   },
   link: {
-    color: '#93c5fd',
-    textDecorationLine: 'underline',
-  },
-  errorText: {
-    color: '#f87171',
-    marginTop: 6,
-    fontSize: 13,
+    color: "#38bdf8",
+    fontSize: 15,
+    textAlign: "center",
   },
 });
-
-export default Login;
