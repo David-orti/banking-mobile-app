@@ -3,7 +3,7 @@ import 'react-native-url-polyfill';
 
 
 
-const SUPABASE_URL = 'https://kalawdqbtixnkbcpbxgb.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImthbGF3ZHFidGl4bmtiY3BieGdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxODA0NjYsImV4cCI6MjA3OTc1NjQ2Nn0.zsWF91YOFKUmUs4iC_lHlIP1HEPZb34dNzyaFdRG5rA';
+const SUPABASE_URL = 'https://lqqhlmgjyldkpzudfhdz.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxcWhsbWdqeWxka3B6dWRmaGR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyOTc0NzUsImV4cCI6MjA3OTg3MzQ3NX0.ygqVOisKkHB_TR5mrE-_bffGy3KlvxZxAohcM_7wqXE';
 
  export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);

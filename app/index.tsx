@@ -1,8 +1,9 @@
-import { useState } from "react";
+ import { useState } from "react";
 import Login from "./src/screens/Login";
 import Splash from "./src/screens/Splash";
+import Register from "./src/screens/Register";
 
-export default function App() {
+ export default function App() {
 
   const [showSplash, setShowSplash] = useState(true);
   if (showSplash){
