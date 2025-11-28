@@ -1,14 +1,3 @@
-/*
-  Login.tsx
-  React Native login screen matching style/structure of your Register.tsx.
-  Requisitos:
-    npm install react-native-get-random-values
-    expo install react-native-get-random-values   # si usas Expo
-*/
-
-import 'react-native-get-random-values';
-
-import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -22,6 +11,10 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import 'react-native-get-random-values';
+
+import bcrypt from 'bcryptjs';
+import { useRouter } from 'expo-router';
 import { supabase } from '../../lib/supabase';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -56,7 +49,6 @@ const Login: React.FC = () => {
     focused === name ? styles.inputFocus.borderColor : styles.input.borderColor;
 
   const handleSignIn = async () => {
-    // marcar touched para mostrar errores si no ha interactuado
     setTouched({ email: true, password: true });
 
     const err = validateAll();
@@ -68,31 +60,43 @@ const Login: React.FC = () => {
     try {
       setLoading(true);
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
-        password: String(password),
-      });
+      // 1) Buscar usuario en la tabla
+      const { data: users, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email.trim().toLowerCase())
+        .limit(1);
 
-      if (error) {
-        // supabase puede regresar errores como PostgrestError o auth error
-        throw error;
+      if (error) throw error;
+
+      if (!users || users.length === 0) {
+        Alert.alert('Login failed', 'El usuario no existe');
+        return;
       }
 
-      // login exitoso
-      Alert.alert('Success', 'Signed in successfully');
-      // Redirigir a la pantalla principal (ajusta la ruta según tu app)
-      router.push('/src/screens/Main');
+      const user = users[0];
+
+      // 2) Comparar contraseña usando bcrypt
+      const isValid = await bcrypt.compare(password, user.password);
+
+      if (!isValid) {
+        Alert.alert('Login failed', 'Contraseña incorrecta');
+        return;
+      }
+
+      Alert.alert('Success', 'Inicio de sesión correcto');
+
+      // 3) Navegar al Main
+      router.push('/src/screens/Main'); // <-- ESTA ES LA RUTA CORRECTA
+
     } catch (e: any) {
-      const message = e?.message || 'Unknown error';
-      console.error('Login failed:', e);
-      Alert.alert('Login failed', message);
+      Alert.alert('Login failed', e?.message || 'Unknown error');
     } finally {
       setLoading(false);
     }
   };
 
   const goToRegister = () => {
-    // Ajusta la ruta si tu archivo de register está en otra ruta
     router.push('/src/screens/Register');
   };
 
@@ -186,10 +190,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#111827',
     borderRadius: 16,
     padding: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
     elevation: 6,
   },
   title: {
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   inputFocus: {
-    borderColor: '#16a34a', // verde
+    borderColor: '#16a34a',
   },
   button: {
     backgroundColor: '#22c55e',
