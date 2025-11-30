@@ -1,19 +1,24 @@
-import React, { useEffect, useState } from "react";
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  ActivityIndicator 
-} from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import supabase from "../../lib/supabase";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View
+} from "react-native";
+import { supabase } from "../../lib/supabase";
 
 export default function AccountDetails() {
-  const { account_number } = useLocalSearchParams();
+  const params = useLocalSearchParams();
+
+  // ⭐ CORRECCIÓN: asegurar que sea string siempre
+  const account_number = Array.isArray(params.account_number)
+    ? params.account_number[0]
+    : params.account_number;
 
   const [account, setAccount] = useState<any>(null);
-  const [transactions, setTransactions] = useState([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,7 +27,7 @@ export default function AccountDetails() {
 
   const loadAccountDetails = async () => {
     try {
-      // Obtener datos de la cuenta
+      // 1️⃣ Obtener la cuenta
       const { data: accountData, error: accError } = await supabase
         .from("accounts")
         .select("*")
@@ -32,7 +37,7 @@ export default function AccountDetails() {
       if (accError) throw accError;
       setAccount(accountData);
 
-      // Obtener transacciones de esa cuenta
+      // 2️⃣ Obtener transacciones
       const { data: transData, error: transError } = await supabase
         .from("transactions")
         .select("*")
@@ -40,7 +45,8 @@ export default function AccountDetails() {
         .order("created_at", { ascending: false });
 
       if (transError) throw transError;
-      setTransactions(transData);
+
+      setTransactions(transData || []);
 
     } catch (error) {
       console.log("❌ Error:", error);
@@ -52,7 +58,8 @@ export default function AccountDetails() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size={40} />
+        <ActivityIndicator size={40} color="#22c55e" />
+        <Text style={{ color: "white", marginTop: 10 }}>Cargando...</Text>
       </View>
     );
   }
@@ -79,13 +86,13 @@ export default function AccountDetails() {
         <Text style={styles.label}>Balance</Text>
         <Text style={styles.balance}>${account.balance}</Text>
 
-        <Text style={styles.label}>Creada en</Text>
+        <Text style={styles.label}>Fecha de Creación</Text>
         <Text style={styles.value}>
           {new Date(account.created_at).toLocaleString()}
         </Text>
       </View>
 
-      <View style={styles.transactionsCard}>
+      <View style={styles.card}>
         <Text style={styles.title}>Transacciones</Text>
 
         {transactions.length === 0 ? (
@@ -96,12 +103,20 @@ export default function AccountDetails() {
               <Text style={styles.transType}>
                 {t.type === "deposit" ? "Depósito" : "Retiro"}
               </Text>
-              <Text style={styles.transAmount}>
+
+              <Text
+                style={[
+                  styles.transAmount,
+                  { color: t.type === "deposit" ? "#22c55e" : "#ef4444" },
+                ]}
+              >
                 {t.type === "deposit" ? "+" : "-"}${t.amount}
               </Text>
+
               <Text style={styles.transDate}>
                 {new Date(t.created_at).toLocaleString()}
               </Text>
+
               <Text style={styles.transDesc}>{t.description}</Text>
             </View>
           ))
@@ -117,12 +132,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
   },
   card: {
-    backgroundColor: "white",
-    padding: 20,
-    borderRadius: 15,
-    marginBottom: 20,
-  },
-  transactionsCard: {
     backgroundColor: "white",
     padding: 20,
     borderRadius: 15,

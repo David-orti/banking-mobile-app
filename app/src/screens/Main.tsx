@@ -1,5 +1,7 @@
+// src/screens/Main.tsx
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -12,61 +14,85 @@ import {
 } from "react-native";
 
 export default function Main() {
-  const router = useRouter();
+  const navigation = useNavigation();
+  const route = useRoute();
+
+  // user viene cuando haces login → navigation.navigate("Main", { user })
+  const params: any = route.params || {};
+  const user = params.user;
+
   const [userData, setUserData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const stored = await AsyncStorage.getItem("session_user");
+        // ⭐ 1. Si viene usuario desde el login
+        if (user) {
+          let parsed = user;
 
+          if (typeof user === "string") {
+            try {
+              parsed = JSON.parse(user);
+            } catch (e) {}
+          }
+
+          setUserData(parsed);
+          await AsyncStorage.setItem("session_user", JSON.stringify(parsed));
+          setLoading(false);
+          return;
+        }
+
+        // ⭐ 2. Cargar desde AsyncStorage si no viene nada por params
+        const stored = await AsyncStorage.getItem("session_user");
         if (stored) {
           setUserData(JSON.parse(stored));
-        } else {
-          console.log("[Main] No hay sesión activa.");
         }
       } catch (e) {
-        console.error("[Main] loadUser error:", e);
+        console.error("Error cargando usuario:", e);
       } finally {
         setLoading(false);
       }
     };
 
     loadUser();
-  }, []);
+  }, [user]);
 
+  // ⭐ Cerrar sesión
   const handleLogout = async () => {
-    try {
-      await AsyncStorage.removeItem("session_user");
-    } catch (e) {
-      console.warn("[Main] error removing session_user:", e);
-    } finally {
-      router.replace("/src/screens/Login");
-    }
+    await AsyncStorage.removeItem("session_user");
+
+    // Reset para evitar volver atrás
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Login" }],
+    });
   };
 
-  if (loading) {
+  if (loading)
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#22c55e" />
         <Text style={{ color: "white", marginTop: 10 }}>Cargando...</Text>
       </View>
     );
-  }
 
-  if (!userData) {
+  if (!userData)
     return (
       <View style={styles.loadingContainer}>
         <Text style={{ color: "white" }}>No hay sesión activa.</Text>
-        <TouchableOpacity onPress={() => router.replace("/src/screens/Login")}>
+
+        <TouchableOpacity
+          onPress={() =>
+            navigation.reset({ index: 0, routes: [{ name: "Login" }] })
+          }
+        >
           <Text style={{ color: "#38bdf8", marginTop: 12 }}>Ir al login</Text>
         </TouchableOpacity>
       </View>
     );
-  }
 
-  const account = userData.account ?? null;
+  const account = userData?.account ?? null;
 
   return (
     <ScrollView style={styles.container}>
@@ -78,8 +104,7 @@ export default function Main() {
 
         <Image
           source={{
-            uri:
-              "https://ui-avatars.com/api/?name=" + (userData.firstname || "User"),
+            uri: `https://ui-avatars.com/api/?name=${userData.firstname}`,
           }}
           style={styles.avatar}
         />
@@ -111,25 +136,9 @@ export default function Main() {
         </View>
       </View>
 
-      <View style={styles.card2}>
-        <Text style={styles.cardTitle}>Tu Perfil</Text>
-
-        <View style={styles.row}>
-          <Text style={styles.label}>Email:</Text>
-          <Text style={styles.value}>{userData.email ?? "-"}</Text>
-        </View>
-
-        <View style={styles.row}>
-          <Text style={styles.label}>Móvil:</Text>
-          <Text style={styles.value}>{userData.mobile_number ?? "-"}</Text>
-        </View>
-      </View>
-
       <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
         <Text style={styles.logoutText}>Cerrar sesión</Text>
       </TouchableOpacity>
-
-      <View style={{ height: 50 }} />
     </ScrollView>
   );
 }
@@ -164,14 +173,17 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginTop: 10,
   },
-  card2: {
-    backgroundColor: "#1e293b",
-    padding: 20,
-    borderRadius: 16,
-    marginTop: 20,
+  cardTitle: {
+    color: "#fff",
+    fontSize: 20,
+    marginBottom: 15,
+    fontWeight: "700",
   },
-  cardTitle: { color: "#fff", fontSize: 20, marginBottom: 15, fontWeight: "700" },
-  row: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10 },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
   label: { color: "#94a3b8", fontSize: 14 },
   value: { color: "white", fontSize: 16, fontWeight: "600" },
   balance: { color: "#22c55e", fontSize: 20, fontWeight: "800" },

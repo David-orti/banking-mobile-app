@@ -1,29 +1,33 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
-import Login from "./src/screens/Login";
-import Main from "./src/screens/Main";
-import Splash from "./src/screens/Splash"
-export default function App() {
+import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Splash from "../splash";
+
+export default function Index() {
+  const router = useRouter();
   const [showSplash, setShowSplash] = useState(true);
-  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const loadSession = async () => {
-      const saved = await AsyncStorage.getItem("session_user");
-      if (saved) {
-        setUser(JSON.parse(saved));
-      }
-      setShowSplash(false);
+    const checkLogin = async () => {
+      const saved = await AsyncStorage.getItem("user");
+
+      setTimeout(() => {
+        setShowSplash(false);
+
+        if (saved) {
+          router.replace("./main");
+        } else {
+          router.replace("./login");
+        }
+      }, 2000);
     };
 
-    loadSession();
+    checkLogin();
   }, []);
 
   if (showSplash) {
-    return <Splash onFinish={() => {}} />;
+    return <Splash />;
   }
 
-  return user ? <Main user ={user} /> : <Login />;
+  return null;
 }
-
-

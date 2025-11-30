@@ -1,18 +1,24 @@
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  View,
-  Text,
+  Alert,
   StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
-  Alert,
+  View,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import supabase from "../lib/supabase";
+import { supabase } from "../../lib/supabase";
 
 export default function NewTransaction() {
   const router = useRouter();
-  const { account_id } = useLocalSearchParams();
+  const params = useLocalSearchParams();
+
+  // Convertir correctamente parámetros
+  const account_number =
+    Array.isArray(params.account_number)
+      ? params.account_number[0]
+      : params.account_number;
 
   const [amount, setAmount] = useState("");
   const [type, setType] = useState("deposit");
@@ -25,34 +31,49 @@ export default function NewTransaction() {
       return;
     }
 
-    const { data: account } = await supabase
+    // Obtener la cuenta real
+    const { data: account, error: accErr } = await supabase
       .from("accounts")
       .select("*")
-      .eq("id", account_id)
+      .eq("account_number", account_number)
       .single();
 
+    if (accErr || !account) {
+      Alert.alert("Error", "Cuenta no encontrada");
+      return;
+    }
+
+    // Calcular nuevo balance
     const newBalance =
       type === "deposit"
-        ? account.balance + value
-        : account.balance - value;
+        ? Number(account.balance) + value
+        : Number(account.balance) - value;
 
     if (newBalance < 0) {
       Alert.alert("Error", "Saldo insuficiente");
       return;
     }
 
-    await supabase.from("transactions").insert([
+    // Registrar transacción
+    const { error: insertErr } = await supabase.from("transactions").insert([
       {
-        account_id: account_id,
+        account_number: account_number,
         amount: value,
         type: type,
+        description: type === "deposit" ? "Depósito" : "Retiro",
       },
     ]);
 
+    if (insertErr) {
+      Alert.alert("Error creando transacción", insertErr.message);
+      return;
+    }
+
+    // Actualizar balance
     await supabase
       .from("accounts")
       .update({ balance: newBalance })
-      .eq("id", account_id);
+      .eq("account_number", account_number);
 
     Alert.alert("Éxito", "Transacción realizada");
     router.back();
@@ -80,8 +101,10 @@ export default function NewTransaction() {
 
       <TextInput
         placeholder="Monto"
+        placeholderTextColor="#94a3b8"
         keyboardType="numeric"
         style={styles.input}
+        value={amount}
         onChangeText={setAmount}
       />
 
@@ -93,31 +116,42 @@ export default function NewTransaction() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 25 },
-  title: { fontSize: 26, fontWeight: "bold", marginBottom: 20 },
+  container: { flex: 1, padding: 25, backgroundColor: "#0f172a" },
+  title: {
+    fontSize: 26,
+    fontWeight: "bold",
+    marginBottom: 20,
+    color: "white",
+  },
   input: {
     borderWidth: 1,
+    borderColor: "#334155",
+    backgroundColor: "#1e293b",
     padding: 12,
     borderRadius: 10,
     marginTop: 20,
+    color: "white",
+    fontSize: 18,
   },
   btn: {
-    backgroundColor: "black",
+    backgroundColor: "#22c55e",
     padding: 15,
     borderRadius: 10,
     marginTop: 30,
   },
-  btnText: { color: "#fff", textAlign: "center", fontSize: 18 },
-  row: { flexDirection: "row", justifyContent: "space-around" },
+  btnText: { color: "#0f172a", textAlign: "center", fontSize: 20, fontWeight: "700" },
+  row: { flexDirection: "row", justifyContent: "space-around", marginBottom: 20 },
   typeBtn: {
     padding: 15,
     borderWidth: 1,
+    borderColor: "#334155",
     borderRadius: 10,
     width: "45%",
     alignItems: "center",
+    backgroundColor: "#1e293b",
   },
   active: {
-    backgroundColor: "black",
+    backgroundColor: "#22c55e",
   },
-  typeText: { color: "white" },
+  typeText: { color: "white", fontSize: 16, fontWeight: "600" },
 });

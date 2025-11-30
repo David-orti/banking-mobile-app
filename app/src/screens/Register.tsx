@@ -15,7 +15,6 @@ import {
   View
 } from 'react-native';
 
-import { PostgrestError } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
 import { supabase } from '../../lib/supabase';
 
@@ -122,10 +121,11 @@ const handleRegister = async () => {
     resetForm();
 
     // navegar al Main y pasar user
-    router.push({
-      pathname: '/src/screens/Main',
-      params: { user: JSON.stringify(userToStore) }
-    });
+   router.push({
+   pathname: "src/screens/Main",
+   params: { user: JSON.stringify(userToStore) }
+   });
+
 
   } catch (e) {
     const s = (e as any)?.message || JSON.stringify(e);

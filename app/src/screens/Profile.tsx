@@ -12,12 +12,12 @@ export default function Profile() {
   }, []);
 
   const loadUser = async () => {
-    const data = await AsyncStorage.getItem("session");
+    const data = await AsyncStorage.getItem("session_user"); // 🔥 CORREGIDO
     if (data) setUser(JSON.parse(data));
   };
 
   const logout = async () => {
-    await AsyncStorage.removeItem("session");
+    await AsyncStorage.removeItem("session_user"); // 🔥 CORREGIDO
     router.replace("/");
   };
 
@@ -28,7 +28,9 @@ export default function Profile() {
       {user && (
         <>
           <Text style={styles.label}>Nombre</Text>
-          <Text style={styles.value}>{user.firstname} {user.lastname}</Text>
+          <Text style={styles.value}>
+            {user.firstname} {user.lastname}
+          </Text>
 
           <Text style={styles.label}>Correo</Text>
           <Text style={styles.value}>{user.email}</Text>
@@ -46,15 +48,37 @@ export default function Profile() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 25 },
-  title: { fontSize: 30, fontWeight: "bold", marginBottom: 20 },
-  label: { fontSize: 16, color: "#888", marginTop: 15 },
-  value: { fontSize: 20, fontWeight: "bold" },
+  container: {
+    flex: 1,
+    padding: 25,
+    backgroundColor: "#0f172a", // 🔥 Fondo dark
+  },
+  title: {
+    fontSize: 30,
+    fontWeight: "bold",
+    marginBottom: 25,
+    color: "white",
+  },
+  label: {
+    fontSize: 16,
+    color: "#94a3b8",
+    marginTop: 15,
+  },
+  value: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "white",
+  },
   logout: {
-    marginTop: 40,
+    marginTop: 50,
     padding: 15,
-    backgroundColor: "red",
+    backgroundColor: "#ef4444",
     borderRadius: 10,
   },
-  logoutText: { color: "white", textAlign: "center", fontSize: 18 },
+  logoutText: {
+    color: "white",
+    textAlign: "center",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
 });
