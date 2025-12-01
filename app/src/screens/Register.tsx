@@ -121,10 +121,7 @@ const handleRegister = async () => {
     resetForm();
 
     // navegar al Main y pasar user
-   router.push({
-   pathname: "src/screens/Main",
-   params: { user: JSON.stringify(userToStore) }
-   });
+   router.replace("./Main");
 
 
   } catch (e) {

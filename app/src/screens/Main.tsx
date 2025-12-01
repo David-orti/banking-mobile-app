@@ -1,7 +1,7 @@
-// src/screens/Main.tsx
+// app/src/screens/Main.tsx
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -14,36 +14,13 @@ import {
 } from "react-native";
 
 export default function Main() {
-  const navigation = useNavigation();
-  const route = useRoute();
-
-  // user viene cuando haces login → navigation.navigate("Main", { user })
-  const params: any = route.params || {};
-  const user = params.user;
-
+  const router = useRouter();
   const [userData, setUserData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadUser = async () => {
       try {
-        // ⭐ 1. Si viene usuario desde el login
-        if (user) {
-          let parsed = user;
-
-          if (typeof user === "string") {
-            try {
-              parsed = JSON.parse(user);
-            } catch (e) {}
-          }
-
-          setUserData(parsed);
-          await AsyncStorage.setItem("session_user", JSON.stringify(parsed));
-          setLoading(false);
-          return;
-        }
-
-        // ⭐ 2. Cargar desde AsyncStorage si no viene nada por params
         const stored = await AsyncStorage.getItem("session_user");
         if (stored) {
           setUserData(JSON.parse(stored));
@@ -56,17 +33,11 @@ export default function Main() {
     };
 
     loadUser();
-  }, [user]);
+  }, []);
 
-  // ⭐ Cerrar sesión
   const handleLogout = async () => {
     await AsyncStorage.removeItem("session_user");
-
-    // Reset para evitar volver atrás
-    navigation.reset({
-      index: 0,
-      routes: [{ name: "Login" }],
-    });
+    router.replace("/src/screens/Login");
   };
 
   if (loading)
@@ -81,18 +52,11 @@ export default function Main() {
     return (
       <View style={styles.loadingContainer}>
         <Text style={{ color: "white" }}>No hay sesión activa.</Text>
-
-        <TouchableOpacity
-          onPress={() =>
-            navigation.reset({ index: 0, routes: [{ name: "Login" }] })
-          }
-        >
+        <TouchableOpacity onPress={() => router.replace("/src/screens/Login")}>
           <Text style={{ color: "#38bdf8", marginTop: 12 }}>Ir al login</Text>
         </TouchableOpacity>
       </View>
     );
-
-  const account = userData?.account ?? null;
 
   return (
     <ScrollView style={styles.container}>
@@ -115,24 +79,22 @@ export default function Main() {
 
         <View style={styles.row}>
           <Text style={styles.label}>Número:</Text>
-          <Text style={styles.value}>{account?.account_number ?? "-"}</Text>
+          <Text style={styles.value}>{userData.account_number ?? "-"}</Text>
         </View>
 
         <View style={styles.row}>
           <Text style={styles.label}>Tipo:</Text>
-          <Text style={styles.value}>{account?.account_type ?? "-"}</Text>
+          <Text style={styles.value}>Ahorros</Text>
         </View>
 
         <View style={styles.row}>
           <Text style={styles.label}>Saldo:</Text>
-          <Text style={styles.balance}>${account?.balance ?? 0}</Text>
+          <Text style={styles.balance}>${userData.balance ?? 0}</Text>
         </View>
 
         <View style={styles.row}>
           <Text style={styles.label}>Estado:</Text>
-          <Text style={styles.value}>
-            {account?.status ? "Activa" : "Inactiva"}
-          </Text>
+          <Text style={styles.value}>Activa</Text>
         </View>
       </View>
 

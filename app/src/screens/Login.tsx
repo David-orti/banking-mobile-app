@@ -84,11 +84,8 @@ export default function Login() {
       Alert.alert("Éxito", "Inicio de sesión correcto.");
 
       // Navegar al Main
-      try {
-        router.replace("../src/screens/Main");
-      } catch {
-        router.replace("../");
-      }
+    router.replace("/src/screens/Main");
+
     } catch (e: any) {
       console.error("[Login] error:", e);
       Alert.alert("Error", e.message || "Hubo un problema inesperado.");
@@ -138,7 +135,7 @@ export default function Login() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => router.push("../src/screens/Register")}
+          onPress={() => router.push("/src/screens/Register")}
           style={{ marginTop: 15 }}
         >
           <Text style={styles.link}>¿No tienes cuenta? Regístrate aquí.</Text>

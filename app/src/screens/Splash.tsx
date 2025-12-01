@@ -1,44 +1,29 @@
-import { useEffect } from "react";
-import {
-    Image,
-    StyleSheet,
-    View
-} from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { Image, StyleSheet, View } from 'react-native';
 
-const Splash = ({ onFinish}: {onFinish: () => void }) => {
-  useEffect(() => {
-    const  timer = setTimeout(() =>{
-          onFinish();
-    }, 5000 );
-    return () => clearTimeout(timer);
-    
-  }, [onFinish]);
-
+export default function Splash() {
   return (
     <View style={styles.container}>
-        <Image
+      <StatusBar style="light" />
+      
+      <Image 
         source={require('../assets/images/main_logo.png')}
-        style={styles.logo}
-        resizeMode='contain'
-        />
+        style={styles.image}
+        resizeMode="contain"
+      />
     </View>
   );
-};
-
-const styles =  StyleSheet.create({
-    container:{
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(3, 0, 209, 1)'
-    },
-
-    logo: {
-        width: 200,
-        height: 200
-    }
 }
 
-);
-
-export default Splash;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#1E40AF', // Cambia el color si quieres
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  image: {
+    width: 250,
+    height: 250,
+  },
+});
