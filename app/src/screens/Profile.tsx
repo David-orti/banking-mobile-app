@@ -1,7 +1,18 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+// ========================================
+// 5️⃣ Profile.tsx - MEJORADO
+// ========================================
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
+import {
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function Profile() {
   const router = useRouter();
@@ -12,73 +23,171 @@ export default function Profile() {
   }, []);
 
   const loadUser = async () => {
-    const data = await AsyncStorage.getItem("session_user"); // 🔥 CORREGIDO
+    const data = await AsyncStorage.getItem("session_user");
     if (data) setUser(JSON.parse(data));
   };
 
   const logout = async () => {
-    await AsyncStorage.removeItem("session_user"); // 🔥 CORREGIDO
-    router.replace("/");
+    Alert.alert(
+      "Cerrar Sesión",
+      "¿Estás seguro que deseas salir?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Salir",
+          style: "destructive",
+          onPress: async () => {
+            await AsyncStorage.removeItem("session_user");
+            router.replace("/src/screens/Login");
+          },
+        },
+      ]
+    );
   };
 
+  if (!user) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={{ color: "white" }}>Cargando perfil...</Text>
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Perfil</Text>
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()}>
+          <Text style={styles.backBtn}>← Volver</Text>
+        </TouchableOpacity>
+        <Text style={styles.title}>Mi Perfil</Text>
+      </View>
 
-      {user && (
-        <>
-          <Text style={styles.label}>Nombre</Text>
-          <Text style={styles.value}>
-            {user.firstname} {user.lastname}
-          </Text>
+      <View style={styles.avatarContainer}>
+        <Image
+          source={{
+            uri: `https://ui-avatars.com/api/?name=${user.firstname}+${user.lastname}&size=120`,
+          }}
+          style={styles.avatar}
+        />
+        <Text style={styles.userName}>
+          {user.firstname} {user.lastname}
+        </Text>
+      </View>
 
-          <Text style={styles.label}>Correo</Text>
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>Información Personal</Text>
+
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>📧 Correo</Text>
           <Text style={styles.value}>{user.email}</Text>
+        </View>
 
-          <Text style={styles.label}>Número</Text>
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>📱 Teléfono</Text>
           <Text style={styles.value}>{user.mobile_number}</Text>
-        </>
-      )}
+        </View>
 
-      <TouchableOpacity style={styles.logout} onPress={logout}>
-        <Text style={styles.logoutText}>Cerrar Sesión</Text>
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>🏦 Cuenta</Text>
+          <Text style={styles.value}>
+            **** {user.account_number?.slice(-4) || "****"}
+          </Text>
+        </View>
+      </View>
+
+      <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
+        <Text style={styles.logoutText}>🚪 Cerrar Sesión</Text>
       </TouchableOpacity>
-    </View>
+
+      <View style={{ height: 40 }} />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 25,
-    backgroundColor: "#0f172a", // 🔥 Fondo dark
+    backgroundColor: "#0f172a",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#0f172a",
+  },
+  header: {
+    paddingTop: 60,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  backBtn: {
+    color: "#38bdf8",
+    fontSize: 16,
+    marginBottom: 10,
   },
   title: {
-    fontSize: 30,
+    fontSize: 28,
     fontWeight: "bold",
-    marginBottom: 25,
     color: "white",
+  },
+  avatarContainer: {
+    alignItems: "center",
+    marginVertical: 30,
+  },
+  avatar: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 4,
+    borderColor: "#22c55e",
+    marginBottom: 16,
+  },
+  userName: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "white",
+  },
+  card: {
+    backgroundColor: "#1e293b",
+    marginHorizontal: 20,
+    padding: 20,
+    borderRadius: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#334155",
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "white",
+    marginBottom: 16,
+  },
+  infoRow: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#334155",
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#94a3b8",
-    marginTop: 15,
+    marginBottom: 6,
   },
   value: {
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: 16,
+    fontWeight: "600",
     color: "white",
   },
-  logout: {
-    marginTop: 50,
-    padding: 15,
+  logoutBtn: {
+    marginHorizontal: 20,
+    marginTop: 20,
+    padding: 16,
     backgroundColor: "#ef4444",
-    borderRadius: 10,
+    borderRadius: 12,
   },
   logoutText: {
     color: "white",
     textAlign: "center",
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: "700",
   },
 });
