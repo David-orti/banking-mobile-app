@@ -84,7 +84,7 @@ export default function Login() {
       Alert.alert("Éxito", "Inicio de sesión correcto.");
 
       // Navegar al Main
-    router.replace("/src/screens/Main");
+    router.replace("/(tabs)");
 
     } catch (e: any) {
       console.error("[Login] error:", e);

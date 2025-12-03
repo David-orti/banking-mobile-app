@@ -121,7 +121,7 @@ const handleRegister = async () => {
     resetForm();
 
     // navegar al Main y pasar user
-   router.replace("./Main");
+   router.replace("/(tabs)");
 
 
   } catch (e) {
