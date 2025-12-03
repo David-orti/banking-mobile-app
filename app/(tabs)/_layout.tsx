@@ -26,7 +26,7 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: "Inicio",
-          tabBarIcon: ({ color, size, focused }) => (
+          tabBarIcon: () => (
             <View style={{ alignItems: "center" }}>
               <Text style={{ fontSize: 24 }}>🏠</Text>
             </View>
@@ -38,7 +38,7 @@ export default function TabsLayout() {
         name="transactions"
         options={{
           title: "Actividad",
-          tabBarIcon: ({ color, size, focused }) => (
+          tabBarIcon: () => (
             <View style={{ alignItems: "center" }}>
               <Text style={{ fontSize: 24 }}>📊</Text>
             </View>
@@ -50,9 +50,22 @@ export default function TabsLayout() {
         name="cards"
         options={{
           title: "Tarjetas",
-          tabBarIcon: ({ color, size, focused }) => (
+          tabBarIcon: () => (
             <View style={{ alignItems: "center" }}>
               <Text style={{ fontSize: 24 }}>💳</Text>
+            </View>
+          ),
+        }}
+      />
+
+      {/* ✅ NUEVA TAB DE TRANSFERIR DENTRO DEL <Tabs> */}
+      <Tabs.Screen
+        name="transfer"
+        options={{
+          title: "Transferir",
+          tabBarIcon: () => (
+            <View style={{ alignItems: "center" }}>
+              <Text style={{ fontSize: 24 }}>🔁</Text>
             </View>
           ),
         }}
@@ -62,7 +75,7 @@ export default function TabsLayout() {
         name="profile"
         options={{
           title: "Perfil",
-          tabBarIcon: ({ color, size, focused }) => (
+          tabBarIcon: () => (
             <View style={{ alignItems: "center" }}>
               <Text style={{ fontSize: 24 }}>👤</Text>
             </View>
