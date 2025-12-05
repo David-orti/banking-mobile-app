@@ -2,21 +2,23 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Image,
   Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function Profile() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+  const [hasPin, setHasPin] = useState(false);
 
   useEffect(() => {
     loadUser();
+    checkPin();
   }, []);
 
   const loadUser = async () => {
@@ -24,22 +26,23 @@ export default function Profile() {
     if (data) setUser(JSON.parse(data));
   };
 
+  const checkPin = async () => {
+    const pin = await AsyncStorage.getItem("security_pin");
+    setHasPin(!!pin);
+  };
+
   const logout = async () => {
-    Alert.alert(
-      "Cerrar Sesión",
-      "¿Estás seguro que deseas salir?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Salir",
-          style: "destructive",
-          onPress: async () => {
-            await AsyncStorage.removeItem("session_user");
-            router.replace("/src/screens/Login");
-          },
+    Alert.alert("Cerrar Sesión", "¿Estás seguro que deseas salir?", [
+      { text: "Cancelar", style: "cancel" },
+      {
+        text: "Salir",
+        style: "destructive",
+        onPress: async () => {
+          await AsyncStorage.removeItem("session_user");
+          router.replace("/src/screens/Login");
         },
-      ]
-    );
+      },
+    ]);
   };
 
   if (!user) {
@@ -87,6 +90,47 @@ export default function Profile() {
             **** {user.account_number?.slice(-4) || "****"}
           </Text>
         </View>
+      </View>
+
+      {/* Sección de Seguridad */}
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>Seguridad</Text>
+
+        <TouchableOpacity
+          style={styles.securityBtn}
+          onPress={() => router.push("../src/screens/SetupPin")}
+        >
+          <View style={styles.securityBtnContent}>
+            <View>
+              <Text style={styles.securityBtnTitle}>
+                {hasPin ? "🔒 Cambiar PIN" : "🔓 Configurar PIN"}
+              </Text>
+              <Text style={styles.securityBtnSubtitle}>
+                {hasPin
+                  ? "PIN de seguridad activo"
+                  : "Protege tus transacciones con un PIN"}
+              </Text>
+            </View>
+            <Text style={styles.securityBtnArrow}>→</Text>
+          </View>
+        </TouchableOpacity>
+
+        {hasPin && (
+          <TouchableOpacity
+            style={[styles.securityBtn, { marginTop: 12 }]}
+            onPress={() => router.push("../src/screens/VerifyPin")}
+          >
+            <View style={styles.securityBtnContent}>
+              <View>
+                <Text style={styles.securityBtnTitle}>🔐 Verificar PIN</Text>
+                <Text style={styles.securityBtnSubtitle}>
+                  Probar tu PIN de seguridad
+                </Text>
+              </View>
+              <Text style={styles.securityBtnArrow}>→</Text>
+            </View>
+          </TouchableOpacity>
+        )}
       </View>
 
       <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
@@ -165,6 +209,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "white",
+  },
+  securityBtn: {
+    backgroundColor: "#334155",
+    padding: 16,
+    borderRadius: 12,
+  },
+  securityBtnContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  securityBtnTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "white",
+    marginBottom: 4,
+  },
+  securityBtnSubtitle: {
+    fontSize: 13,
+    color: "#94a3b8",
+  },
+  securityBtnArrow: {
+    fontSize: 24,
+    color: "#22c55e",
   },
   logoutBtn: {
     marginHorizontal: 20,

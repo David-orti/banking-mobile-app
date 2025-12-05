@@ -1,26 +1,27 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
-
 import {
-  View,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
-  StyleSheet,
+  View,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { supabase } from "../../lib/supabase"; // AJUSTADO A TU RUTA
+import { supabase } from "../../lib/supabase";
 
 const Transfer = () => {
   const [userData, setUserData] = useState<any>(null);
   const [amount, setAmount] = useState("");
   const [destinationAccount, setDestinationAccount] = useState("");
   const [loading, setLoading] = useState(false);
+  const [destinationUser, setDestinationUser] = useState<any>(null);
 
-  // Cargar usuario almacenado
   useEffect(() => {
     const loadUser = async () => {
-      const stored = await AsyncStorage.getItem("user");
+      const stored = await AsyncStorage.getItem("session_user");
       if (stored) {
         setUserData(JSON.parse(stored));
       }
@@ -28,9 +29,29 @@ const Transfer = () => {
     loadUser();
   }, []);
 
-  // -------------------------------
-  // 🔥 FUNCIÓN PRINCIPAL DE TRANSFERENCIA
-  // -------------------------------
+  // Buscar destinatario
+  const searchDestination = async () => {
+    if (!destinationAccount.trim()) return;
+
+    try {
+      const { data: destAcc, error } = await supabase
+        .from("accounts")
+        .select("*, users:user_email(firstname, lastname)")
+        .eq("account_number", destinationAccount)
+        .single();
+
+      if (error || !destAcc) {
+        Alert.alert("Error", "Cuenta no encontrada");
+        setDestinationUser(null);
+        return;
+      }
+
+      setDestinationUser(destAcc);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
   const handleTransfer = async () => {
     if (!amount || !destinationAccount) {
       Alert.alert("Error", "Completa todos los campos.");
@@ -48,10 +69,15 @@ const Transfer = () => {
       return;
     }
 
+    if (destinationAccount === userData.account_number) {
+      Alert.alert("Error", "No puedes transferir a tu misma cuenta.");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // 1️⃣ Obtener la cuenta origen del usuario
+      // 1️⃣ Obtener cuenta origen
       const { data: originAcc, error: originErr } = await supabase
         .from("accounts")
         .select("*")
@@ -87,7 +113,7 @@ const Transfer = () => {
       // 4️⃣ Registrar transacción – RETIRO en origen
       await supabase.from("transactions").insert({
         account_number: originAcc.account_number,
-        type: "withdrawal",
+        type: "withdraw",
         amount: transferAmount,
         description: `Transferencia enviada a ${destinationAccount}`,
       });
@@ -117,17 +143,18 @@ const Transfer = () => {
         balance: originAcc.balance - transferAmount,
       };
 
-      await AsyncStorage.setItem("user", JSON.stringify(updatedUser));
+      await AsyncStorage.setItem("session_user", JSON.stringify(updatedUser));
       setUserData(updatedUser);
 
       setLoading(false);
       Alert.alert(
-        "Transferencia Exitosa",
-        `Has enviado $${transferAmount} a la cuenta ${destinationAccount}`
+        "✅ Transferencia Exitosa",
+        `Has enviado $${transferAmount} a ${destinationUser?.users?.firstname || "la cuenta"}`
       );
 
       setAmount("");
       setDestinationAccount("");
+      setDestinationUser(null);
     } catch (e) {
       console.log(e);
       Alert.alert("Error", "Ocurrió un error inesperado.");
@@ -136,79 +163,160 @@ const Transfer = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Transferencia Bancaria</Text>
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Transferir Dinero</Text>
+        {userData && (
+          <View style={styles.balanceCard}>
+            <Text style={styles.balanceLabel}>Saldo disponible</Text>
+            <Text style={styles.balance}>${userData.balance || 0}</Text>
+          </View>
+        )}
+      </View>
 
-      <Text style={styles.label}>Cuenta destino</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Número de cuenta"
-        keyboardType="numeric"
-        value={destinationAccount}
-        onChangeText={setDestinationAccount}
-      />
+      <View style={styles.form}>
+        <Text style={styles.label}>Cuenta destino</Text>
+        <View style={styles.inputRow}>
+          <TextInput
+            style={[styles.input, { flex: 1 }]}
+            placeholder="Número de cuenta"
+            placeholderTextColor="#64748b"
+            keyboardType="numeric"
+            value={destinationAccount}
+            onChangeText={setDestinationAccount}
+            onBlur={searchDestination}
+          />
+        </View>
 
-      <Text style={styles.label}>Monto</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="0.00"
-        keyboardType="numeric"
-        value={amount}
-        onChangeText={setAmount}
-      />
+        {destinationUser && (
+          <View style={styles.destinationCard}>
+            <Text style={styles.destinationLabel}>Destinatario:</Text>
+            <Text style={styles.destinationName}>
+              {destinationUser.users?.firstname} {destinationUser.users?.lastname}
+            </Text>
+            <Text style={styles.destinationAccount}>
+              Cuenta: {destinationUser.account_number}
+            </Text>
+          </View>
+        )}
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleTransfer}
-        disabled={loading}
-      >
-        <Text style={styles.buttonText}>
-          {loading ? "Procesando..." : "Transferir"}
-        </Text>
-      </TouchableOpacity>
-    </View>
+        <Text style={styles.label}>Monto a transferir</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="$0.00"
+          placeholderTextColor="#64748b"
+          keyboardType="numeric"
+          value={amount}
+          onChangeText={setAmount}
+        />
+
+        <TouchableOpacity
+          style={[styles.button, loading && { opacity: 0.6 }]}
+          onPress={handleTransfer}
+          disabled={loading || !destinationUser}
+        >
+          {loading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text style={styles.buttonText}>Transferir</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 };
 
 export default Transfer;
 
-// -----------------------------------------------
-// 🎨 MISMO ESTILO QUE NEWTRANSACTION
-// -----------------------------------------------
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
     backgroundColor: "#0f172a",
   },
+  header: {
+    paddingTop: 60,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
   title: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: "bold",
     color: "white",
     marginBottom: 20,
   },
+  balanceCard: {
+    backgroundColor: "#1e293b",
+    padding: 20,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#334155",
+  },
+  balanceLabel: {
+    color: "#94a3b8",
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  balance: {
+    color: "#22c55e",
+    fontSize: 32,
+    fontWeight: "800",
+  },
+  form: {
+    padding: 20,
+  },
   label: {
     color: "#cbd5e1",
-    marginBottom: 6,
+    marginBottom: 8,
     fontSize: 16,
+    fontWeight: "600",
+  },
+  inputRow: {
+    flexDirection: "row",
+    marginBottom: 16,
   },
   input: {
     backgroundColor: "#1e293b",
-    padding: 14,
-    borderRadius: 10,
+    padding: 16,
+    borderRadius: 12,
     marginBottom: 16,
     color: "white",
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: "#334155",
+  },
+  destinationCard: {
+    backgroundColor: "#22c55e20",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#22c55e",
+  },
+  destinationLabel: {
+    color: "#94a3b8",
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  destinationName: {
+    color: "#22c55e",
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  destinationAccount: {
+    color: "#cbd5e1",
+    fontSize: 14,
   },
   button: {
     backgroundColor: "#3b82f6",
-    padding: 16,
+    padding: 18,
     borderRadius: 12,
     alignItems: "center",
-    marginTop: 10,
+    marginTop: 20,
   },
   buttonText: {
     color: "white",
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: "bold",
   },
 });
