@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "banking-mobile-app",
+    "name": "Tu Banco Digtal",
     "slug": "banking-mobile-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -13,11 +13,13 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#1E40AF",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      "package": "com.davidorti.bankingapp",
+      "versionCode": 1,
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
@@ -33,9 +35,9 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#1E40AF",
           "dark": {
-            "backgroundColor": "#000000"
+            "backgroundColor": "#0f172a"
           }
         }
       ]
@@ -43,6 +45,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "25040393-6b7a-4c9e-adfe-233adaa2a2c7"
+      }
     }
   }
 }
