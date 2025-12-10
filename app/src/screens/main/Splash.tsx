@@ -7,7 +7,7 @@ export default function Splash() {
       <StatusBar style="light" />
       
       <Image 
-        source={require('../assets/images/main_logo.png')}
+        source={require('../../assets/images/main_logo.png')}
         style={styles.image}
         resizeMode="contain"
       />

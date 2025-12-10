@@ -1,5 +1,5 @@
 // app/src/services/authService.ts
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { LoginForm, RegisterForm } from '../types';
 import { userService } from './userService';
 

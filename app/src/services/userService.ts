@@ -1,5 +1,5 @@
 // app/src/services/userService.ts
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { User } from '../types';
 
 export const userService = {

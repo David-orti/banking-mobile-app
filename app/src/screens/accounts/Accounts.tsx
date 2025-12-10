@@ -12,7 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { supabase } from "../../../lib/supabase";
+import { supabase } from '../../lib/supabase';
 
 export default function Accounts() {
   const router = useRouter();
@@ -79,7 +79,7 @@ export default function Accounts() {
             style={styles.card}
             onPress={() =>
               router.push({
-                pathname: "/src/screens/AccountDetails",
+                pathname: "./src/screens/AccountDetails",
                 params: { account_number: acc.account_number },
               })
             }

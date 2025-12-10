@@ -1,5 +1,5 @@
 // app/src/services/accountService.ts
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { Account } from '../types';
 
 export const accountService = {

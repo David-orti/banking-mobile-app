@@ -3,13 +3,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function Main() {
@@ -36,7 +36,7 @@ export default function Main() {
 
   const handleLogout = async () => {
     await AsyncStorage.removeItem("session_user");
-    router.replace("/src/screens/Login");
+    router.replace("../src/screens/Login");
   };
 
   if (loading)
@@ -51,7 +51,7 @@ export default function Main() {
     return (
       <View style={styles.loadingContainer}>
         <Text style={{ color: "white" }}>No hay sesión activa.</Text>
-        <TouchableOpacity onPress={() => router.replace("/src/screens/Login")}>
+        <TouchableOpacity onPress={() => router.replace("../src/screens/Login")}>
           <Text style={{ color: "#38bdf8", marginTop: 12 }}>Ir al login</Text>
         </TouchableOpacity>
       </View>
@@ -66,7 +66,7 @@ export default function Main() {
           <Text style={styles.name}>{userData.firstname} 👋</Text>
         </View>
 
-        <TouchableOpacity onPress={() => router.push("/src/screens/Profile")}>
+        <TouchableOpacity onPress={() => router.push("../src/screens/Profile")}>
           <Image
             source={{
               uri: `https://ui-avatars.com/api/?name=${userData.firstname}`,
@@ -89,7 +89,7 @@ export default function Main() {
       <View style={styles.actionsGrid}>
         <TouchableOpacity
           style={styles.actionCard}
-          onPress={() => router.push("/src/screens/NewTransaction")}
+          onPress={() => router.push("../src/screens/NewTransaction")}
         >
           <View style={[styles.actionIcon, { backgroundColor: "#22c55e" }]}>
             <Text style={styles.actionEmoji}>💸</Text>
@@ -99,7 +99,7 @@ export default function Main() {
 
         <TouchableOpacity
           style={styles.actionCard}
-          onPress={() => router.push("/src/screens/Transactions")}
+          onPress={() => router.push("../src/screens/Transactions")}
         >
           <View style={[styles.actionIcon, { backgroundColor: "#3b82f6" }]}>
             <Text style={styles.actionEmoji}>📊</Text>
@@ -109,7 +109,7 @@ export default function Main() {
 
         <TouchableOpacity
           style={styles.actionCard}
-          onPress={() => router.push("/src/screens/Cards")}
+          onPress={() => router.push("../src/screens/Cards")}
         >
           <View style={[styles.actionIcon, { backgroundColor: "#8b5cf6" }]}>
             <Text style={styles.actionEmoji}>💳</Text>
@@ -119,7 +119,7 @@ export default function Main() {
 
         <TouchableOpacity
           style={styles.actionCard}
-          onPress={() => router.push("/src/screens/Accounts")}
+          onPress={() => router.push("../src/screens/Accounts")}
         >
           <View style={[styles.actionIcon, { backgroundColor: "#f59e0b" }]}>
             <Text style={styles.actionEmoji}>🏦</Text>
@@ -151,7 +151,7 @@ export default function Main() {
 
         <TouchableOpacity
           style={styles.viewDetailsBtn}
-          onPress={() => router.push("/src/screens/AccountDetails")}
+          onPress={() => router.push("../src/screens/AccountDetails")}
         >
           <Text style={styles.viewDetailsText}>Ver detalles completos →</Text>
         </TouchableOpacity>
@@ -162,7 +162,7 @@ export default function Main() {
         <View style={styles.sectionHeader}>
           <Text style={styles.cardTitle}>Actividad reciente</Text>
           <TouchableOpacity
-            onPress={() => router.push("/src/screens/Transactions")}
+            onPress={() => router.push("../src/screens/Transactions")}
           >
             <Text style={styles.seeAllText}>Ver todo</Text>
           </TouchableOpacity>

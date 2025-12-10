@@ -1,5 +1,5 @@
 // app/src/services/transactionService.ts
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { Transaction, TransferForm } from '../types';
 import { TRANSFER_LIMITS } from '../utils/constants';
 import { accountService } from './accountService';

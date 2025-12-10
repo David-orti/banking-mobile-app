@@ -1,6 +1,6 @@
 // app/src/contexts/UserContext.tsx
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { accountService } from '../services/accountService';
 import { authService } from '../services/authService';
 import { userService } from '../services/userService';

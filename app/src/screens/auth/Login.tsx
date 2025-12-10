@@ -13,7 +13,7 @@ import {
   TextInput,
   TouchableOpacity
 } from "react-native";
-import { supabase } from "../../../lib/supabase"; // verifica tu ruta
+import { supabase } from '../../lib/supabase'; // verifica tu ruta
 
 export default function Login() {
   const [identifier, setIdentifier] = useState(""); // email o móvil
@@ -135,7 +135,7 @@ export default function Login() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => router.push("/src/screens/Register")}
+          onPress={() => router.push("./src/screens/Register")}
           style={{ marginTop: 15 }}
         >
           <Text style={styles.link}>¿No tienes cuenta? Regístrate aquí.</Text>

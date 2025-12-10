@@ -1,5 +1,5 @@
 // app/src/services/cardService.ts
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { Card } from '../types';
 
 export const cardService = {

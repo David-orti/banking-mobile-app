@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { FlatList, StyleSheet, Text, View, TouchableOpacity } from "react-native";
-import { supabase } from "../lib/supabase";
+import { supabase } from '../src/lib/supabase';
 
 export default function Transactions() {
   const router = useRouter();

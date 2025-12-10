@@ -39,7 +39,7 @@ export default function Profile() {
         style: "destructive",
         onPress: async () => {
           await AsyncStorage.removeItem("session_user");
-          router.replace("/src/screens/Login");
+          router.replace("../../src/screens/Login");
         },
       },
     ]);
