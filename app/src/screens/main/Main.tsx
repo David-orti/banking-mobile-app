@@ -67,7 +67,7 @@ export default function Main() {
           <Text style={styles.name}>{userData.firstname} 👋</Text>
         </View>
 
-        <TouchableOpacity onPress={() => router.push("/src/screens/Profile")}>
+        <TouchableOpacity onPress={() => router.push("../src/screens/SetupPin")}>
           <Image
             source={{
               uri: `https://ui-avatars.com/api/?name=${userData.firstname}`,
@@ -80,24 +80,14 @@ export default function Main() {
       {/* Balance Card */}
       <View style={styles.balanceCard}>
         <Text style={styles.balanceLabel}>Saldo disponible</Text>
-        <Text style={styles.balance}>${userData.balance ?? 0}</Text>
+        <Text style={styles.balance}>${userData.balance?.toLocaleString() || 0}</Text>
         <Text style={styles.accountNumber}>
           **** {userData.account_number?.slice(-4) ?? "****"}
         </Text>
       </View>
 
-      {/* Quick Actions */}
+      {/* Quick Actions - SIN TRANSFERIR */}
       <View style={styles.actionsGrid}>
-        <TouchableOpacity
-          style={styles.actionCard}
-          onPress={() => router.push("/src/screens/NewTransaction")}
-        >
-          <View style={[styles.actionIcon, { backgroundColor: "#22c55e" }]}>
-            <Text style={styles.actionEmoji}>💸</Text>
-          </View>
-          <Text style={styles.actionText}>Transferir</Text>
-        </TouchableOpacity>
-
         <TouchableOpacity
           style={styles.actionCard}
           onPress={() => router.push("/src/screens/Transactions")}
@@ -126,6 +116,16 @@ export default function Main() {
             <Text style={styles.actionEmoji}>🏦</Text>
           </View>
           <Text style={styles.actionText}>Cuentas</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.actionCard}
+          onPress={() => router.push("../src/screens/SetupPin")}
+        >
+          <View style={[styles.actionIcon, { backgroundColor: "#22c55e" }]}>
+            <Text style={styles.actionEmoji}>🔒</Text>
+          </View>
+          <Text style={styles.actionText}>Seguridad</Text>
         </TouchableOpacity>
       </View>
 
@@ -177,7 +177,7 @@ export default function Main() {
             <Text style={styles.transactionTitle}>Depósito inicial</Text>
             <Text style={styles.transactionDate}>Hoy</Text>
           </View>
-          <Text style={styles.transactionAmount}>+${userData.balance ?? 0}</Text>
+          <Text style={styles.transactionAmount}>+${userData.balance?.toLocaleString() ?? 0}</Text>
         </View>
       </View>
 
@@ -186,7 +186,7 @@ export default function Main() {
         <Text style={styles.logoutText}>Cerrar sesión</Text>
       </TouchableOpacity>
 
-      <View style={{ height: 30 }} />
+      <View style={{ height: 100 }} />
     </ScrollView>
   );
 }
@@ -215,11 +215,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#22c55e",
   },
-
-  // Balance Card
   balanceCard: {
-    backgroundColor: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-      
+    backgroundColor: "#1e293b",
     padding: 25,
     borderRadius: 20,
     marginBottom: 25,
@@ -242,8 +239,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
-
-  // Quick Actions Grid
   actionsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -276,8 +271,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
-
-  // Cards
   card: {
     backgroundColor: "#1e293b",
     padding: 20,
@@ -322,8 +315,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
-
-  // Section Header
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -335,8 +326,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
-
-  // Transaction Item
   transactionItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -369,8 +358,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
   },
-
-  // Logout
   logoutBtn: {
     backgroundColor: "#ef4444",
     paddingVertical: 14,

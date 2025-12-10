@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 
 import bcrypt from 'bcryptjs';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../../../lib/supabase';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

@@ -13,7 +13,7 @@ import {
   TextInput,
   TouchableOpacity
 } from "react-native";
-import { supabase } from "../../lib/supabase"; // verifica tu ruta
+import { supabase } from "../../../lib/supabase"; // verifica tu ruta
 
 export default function Login() {
   const [identifier, setIdentifier] = useState(""); // email o móvil
