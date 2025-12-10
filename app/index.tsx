@@ -31,7 +31,7 @@ export default function Index() {
         if (saved) {
           router.replace("/(tabs)");
         } else {
-          router.replace("/src/screens/Login");
+          router.replace("../src/screens/Login");
         }
       }, 2000);
     };
